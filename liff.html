@@ -1,22 +1,82 @@
-
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>LIFFロードチェック</title>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js</script>
-  <script defer>
-    window.addEventListener('DOMContentLoaded', () => {
-      const el = document.getElementById('result');
-      el.textContent = window.liff
-        ? '✅ LIFF SDK 読み込みOK'
-        : '❌ window.liff が未定義です（SDK未ロード/順序問題/CSP等）';
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LIFF診断</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 16px; }
+    pre { background: #111; color: #0f0; padding: 12px; white-space: pre-wrap; }
+    .warn { color: #d00; font-weight: bold; }
+  </style>
+
+  <!-- ✅ LIFF SDK（async は付けない。defer はOKだが今回は生で） -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+           // 画面とコンソールに両方出す簡易ロガー
+    function log(msg) {
+      const el = document.getElementById('log');
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      console.log(line);
+      if (el) el.textContent += line + '\n';
+    }
+
+    // すべてのエラーを画面に出す
+    window.addEventListener('error', e => {
+      log('window.onerror: ' + e.message + ' @ ' + (e.filename||'') + ':' + e.lineno + ':' + e.colno);
+    });
+    window.addEventListener('unhandledrejection', e => {
+      const reason = e.reason && (e.reason.stack || e.reason.message || JSON.stringify(e.reason));
+      log('unhandledrejection: ' + reason);
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const liffId = "2008150322-vGVmLzYg"; // ← あなたの本物の LIFF ID に置き換え
+
+      log('ページ読込開始: ' + location.href);
+      log('プロトコル: ' + location.protocol + '（HTTPS必須）');
+
+      // SDK がネットワーク的に読み込めたかの一次判定
+      if (window.__sdkLoaded === false) {
+        log('❌ SDK のダウンロード失敗（CSP/ネットワーク/URLブロックの可能性）');
+        return;
+      }
+
+      if (!window.liff) {
+        log('❌ window.liff が未定義（順序/CSP/ビルドの影響）');
+        return;
+      }
+      log('✅ window.liff は存在');
+
+      try {
+        log('LIFF init 開始…');
+        await window.liff.init({ liffId });
+        await window.liff.ready;
+        log('✅ LIFF init 完了');
+
+        if (!window.liff.isLoggedIn()) {
+          log('未ログイン → login を呼び出します（この直後にリダイレクト）');
+          window.liff.login({ redirectUri: location.href });
+          return; // ここで処理終了（ページ遷移）
+        }
+
+        log('ログイン済 → プロフィール取得');
+        const profile = await window.liff.getProfile();
+        log('✅ 取得成功: userId=' + profile.userId + ', name=' + profile.displayName);
+
+      } catch (e) {
+        log('❌ 例外: ' + (e?.message || JSON.stringify(e)));
+        // 追加でエラー詳細も見たい場合
+        if (e && e.code) log('code=' + e.code);
+      }
     });
   </script>
 </head>
 <body>
-  <h1>LIFFロードチェック</h1>
-  <div id="result">チェック中…</div>
+  <h1>LIFF 診断ログ</h1>
+  <p>何も表示されない場合でも、下のログに原因が流れます。</p>
+  <p class="warn">※ GitHub Pages など <b>HTTPS</b> で公開した URL を、LINE Developers の LIFF エンドポイントに登録してから開いてください。</p>
+  <pre id="log">起動中…（ここにログが出ます）</pre>
 </body>
 </html>
+
 
