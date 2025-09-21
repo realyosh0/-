@@ -7,23 +7,28 @@
 </head>
 <body>
   <h1>LINE userId取得</h1>
-  <div id="userid"></div>
+  <div id="userid"></div>                      
   <script>
-    // ここにあなたのLIFF IDを入れてください
-    const liffId = "2008150322-vGVmLzYg";
+    const liffId = "2008150322-vGVmLzYg"; // ← 本物のLIFF IDに変更
+
+    document.getElementById('userid').innerText = "LIFF初期化中...";
 
     liff.init({ liffId }).then(() => {
+      document.getElementById('userid').innerText = "LIFF初期化成功";
       if (!liff.isLoggedIn()) {
+        document.getElementById('userid').innerText = "ログインしていません。ログインします。";
         liff.login();
       } else {
+        document.getElementById('userid').innerText = "ログイン済み。プロフィール取得中...";
         liff.getProfile().then(profile => {
           document.getElementById('userid').innerText = "userId: " + profile.userId;
+        }).catch(err => {
+          document.getElementById('userid').innerText = "getProfileエラー: " + JSON.stringify(err);
         });
       }
     }).catch(err => {
-      document.getElementById('userid').innerText = "LIFF初期化エラー: " + err;
+      document.getElementById('userid').innerText = "LIFF初期化エラー: " + JSON.stringify(err);
     });
   </script>
 </body>
 </html>
-
