@@ -1,34 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIFF userId取得サンプル</title>
-  <script src="c.line-scdn.net/liff/edge/2/sdk.js</script>
+  <!-- ✅ 正しい SDK の読み込み -->
+  https://static.line-scdn.net/liff/edge/2/sdk.js</script>
 </head>
 <body>
   <h1>LINE userId取得</h1>
-  <div id="userid"></div>                      
+  <div id="userid">読み込み中...</div>
+
   <script>
-    const liffId = "2008150322-vGVmLzYg"; // ← 本物のLIFF IDに変更
+    (async () => {
+      const liffId = "2008150322-vGVmLzYg"; // ← 本物のLIFF IDに変更
+      const out = (msg) => { document.getElementById('userid').innerText = msg; }
 
-    document.getElementById('userid').innerText = "LIFF初期化中...";
+      try {
+        out("LIFF初期化中...");
+        await liff.init({ liffId });
+        await liff.ready; // 読み込み完了を待つ（任意）
 
-    liff.init({ liffId }).then(() => {
-      document.getElementById('userid').innerText = "LIFF初期化成功";
-      if (!liff.isLoggedIn()) {
-        document.getElementById('userid').innerText = "ログインしていません。ログインします。";
-        liff.login();
-      } else {
-        document.getElementById('userid').innerText = "ログイン済み。プロフィール取得中...";
-        liff.getProfile().then(profile => {
-          document.getElementById('userid').innerText = "userId: " + profile.userId;
-        }).catch(err => {
-          document.getElementById('userid').innerText = "getProfileエラー: " + JSON.stringify(err);
-        });
+        if (!liff.isLoggedIn()) {
+          out("ログインしていません。ログインへリダイレクトします…");
+          // 現在のURLに戻るようにしておくのがコツ
+          liff.login({ redirectUri: location.href });
+          return; // ここで処理終了（リダイレクトされます）
+        }
+
+        out("ログイン済み。プロフィール取得中...");
+        const profile = await liff.getProfile();
+        out(`userId: ${profile.userId}\nname: ${profile.displayName}`);
+      } catch (err) {
+        console.error(err);
+        out("エラー: " + (err?.message || JSON.stringify(err)));
       }
-    }).catch(err => {
-      document.getElementById('userid').innerText = "LIFF初期化エラー: " + JSON.stringify(err);
-    });
+    })();
   </script>
 </body>
 </html>
