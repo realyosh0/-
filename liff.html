@@ -9,10 +9,17 @@
     pre { background: #111; color: #0f0; padding: 12px; white-space: pre-wrap; }
     .warn { color: #d00; font-weight: bold; }
   </style>
-
-  <!-- ✅ LIFF SDK（async は付けない。defer はOKだが今回は生で） -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"
-           // 画面とコンソールに両方出す簡易ロガー
+  <!-- ✅ SDKの読み込みはこれだけ！ -->
+  https://static.line-scdn.net/liff/edge/2/sdk.js
+</head>
+<body>
+  <h1>LIFF 診断ログ</h1>
+  <p>何も表示されない場合でも、下のログに原因が流れます。</p>
+  <p class="warn">※ GitHub Pages など <b>HTTPS</b> で公開した URL を、LINE Developers の LIFF エンドポイントに登録してから開いてください。</p>
+  <pre id="log">起動中…（ここにログが出ます）</pre>
+  <!-- ✅ ここから下にJavaScriptを書く -->
+  <script>
+    // 画面とコンソールに両方出す簡易ロガー
     function log(msg) {
       const el = document.getElementById('log');
       const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
@@ -65,18 +72,9 @@
 
       } catch (e) {
         log('❌ 例外: ' + (e?.message || JSON.stringify(e)));
-        // 追加でエラー詳細も見たい場合
         if (e && e.code) log('code=' + e.code);
       }
     });
   </script>
-</head>
-<body>
-  <h1>LIFF 診断ログ</h1>
-  <p>何も表示されない場合でも、下のログに原因が流れます。</p>
-  <p class="warn">※ GitHub Pages など <b>HTTPS</b> で公開した URL を、LINE Developers の LIFF エンドポイントに登録してから開いてください。</p>
-  <pre id="log">起動中…（ここにログが出ます）</pre>
 </body>
 </html>
-
-
